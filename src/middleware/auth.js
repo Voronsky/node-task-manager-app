@@ -1,6 +1,14 @@
 const jwt = require('jsonwebtoken')
 const User = require('../models/user')
 
+/**
+ * 
+ * @param {*} req  - header containing an Authorization key/value pair 
+ * @param {*} res - not used
+ * @param {*} next  - Will continue onto the next Route handler
+ * 
+ * @returns an instance of the User who successfully authenticated
+ */
 const auth = async (req,res,next) => {
     try {
         // We want to parse out the 'Authorization' in the header
@@ -8,9 +16,9 @@ const auth = async (req,res,next) => {
 
         // Do not forget the white space after bearer!
         const token = req.header('Authorization').replace('Bearer ', '')
-        console.log(token)
+        //console.log(token)
         // We will verify this JWT came from us using the private key
-        const decoded = jwt.verify(token, 'thisismynewcourse')
+        const decoded = jwt.verify(token, process.env.JWT_SECRET)
         
         // Find the user with the correct ID with the auth token still stored
         const user = await User.findOne({ _id: decoded._id , 'tokens.token': token})
