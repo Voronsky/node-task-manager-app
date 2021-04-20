@@ -10,11 +10,14 @@ basics:
 
 POST:
 Create a user - url/users
+
 delete yourself - url/users/me
+
 create task - url/tasks
 
 GET:
 get your profile - urll/users/me
+
 get task - url/tasks/
 
 Please be respectful and mindful!
