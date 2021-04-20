@@ -4,7 +4,6 @@ const auth = require('../middleware/auth')
 const router = express.Router()
 
 router.post('/tasks', auth, async (req,res)=>{
-    // const task = new Task(req.body)
     const task = new Task({
         ...req.body,                // ES6 operator
         owner: req.user._id
