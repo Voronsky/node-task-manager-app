@@ -14,7 +14,15 @@ const taskSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
-
+    owner: {
+        type: mongoose.Schema.Types.ObjectId,  // Each Task corresponds to a user ID
+        required: true,
+        ref: 'User',                // This attachs the User and forms a relationship
+                                    // Between both models. Now access is given to
+                                    // the entire User model
+    }
+}, {
+    timestamps: true,
 })
 
 const Task = mongoose.model('Task', taskSchema)

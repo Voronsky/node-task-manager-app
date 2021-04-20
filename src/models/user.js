@@ -2,13 +2,8 @@ const mongoose = require('mongoose')
 const validator = require('validator')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
-mongoose.connect('mongodb://127.0.0.1:27017/task-manager-api',{
-    useNewUrlParser: true, 
-    useUnifiedTopology: true,
-    useFindAndModify: false,
-})
+const Task = require('../models/task')
 
-mongoose.set("useCreateIndex", true)
 
 // Mongoose store 'schemas' 
 const userSchema = new mongoose.Schema({
@@ -53,15 +48,20 @@ const userSchema = new mongoose.Schema({
             type: String,
             required: true,
         }
-    }]
+    }],
+    avatar: {
+        type: Buffer // A binary buffer of the image data
+    }
 
+}, {
+    timestamps: true,
 })
 
 
 // Instance method
 userSchema.methods.generateAuthToken = async function(){
     const user = this
-    const token = jwt.sign({ _id: user._id.toString() }, 'thisismynewcourse')
+    const token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET)
 
     // The property in a User model
     // concat the token to the list of tokens a user may already have
@@ -71,6 +71,17 @@ userSchema.methods.generateAuthToken = async function(){
 
     return token
 }
+
+
+// virtual properties, they are not actual properties in a model
+// Therefore they are not stored in the DB when a user is created
+// This tells Mongoose what a User is related to
+// This looks awfully similar to Foreign Keys in SQL
+userSchema.virtual('tasks', {
+    ref: 'Task',
+    localField: '_id', // Where local data is stored to be associated with
+    foreignField: 'owner', // Where it is being referenced in Task
+})
 
 // We are building an toJSON property which is default looked for
 // Whenever express does JSON.stringify(), it will call a toJSON() on the object
@@ -82,6 +93,7 @@ userSchema.methods.toJSON = function () {
 
     delete userObject.password
     delete userObject.tokens
+    delete userObject.avatar
 
     return userObject
 }
@@ -108,7 +120,7 @@ userSchema.statics.findByCredentials = async (email, password) => {
 
 }
 
-// Hash the plain text password 
+// Hash the plain text password  before a user is saved
 // the 2nd argument is a function , due to the this context it needs
 userSchema.pre('save', async function(next){
 
@@ -118,6 +130,15 @@ userSchema.pre('save', async function(next){
     if(user.isModified('password')){
         user.password = await bcrypt.hash(user.password, 8)
     }
+    next()
+})
+
+
+// Delete user tasks when user is removed
+userSchema.pre('remove', async function(next){
+    const user = this
+    await Task.deleteMany({ owner: user._id }) // Queries documentation in mongoose
+    
     next()
 })
 
