@@ -10,26 +10,37 @@ const taskRouter = require('./routers/task')
 
 
 const app = express()
-const port = process.env.PORT || 3000
-
-// We introduce the next 
-// This acts the in between, the request and the rest of the routers
-//app.use((req,res,next)=>{
-//    if(req.method === 'GET'){
-//        res.send('GET requests are disabled')
-//    } else{
-//        // This will allow it to now 'do something', aka run the handlers now
-//        next()
-//    }
-//
-//})
+const port = process.env.PORT
 
 
-// Maintenance middle war
+// Maintenance middle ware
 //app.use((req,res,next)=>{
 //    // 503 means site unavailable
 //    res.status(503).send('Site is under maintenance!')
 //})
+
+const multer = require('multer')
+const upload = multer({
+    dest: 'images',
+    limits: {
+        fileSize: 10000000, // Max file size
+    },
+    fileFilter(req, file, cb){   // ES6 method definitions
+        if (!file.originalname.match(/\.(doc|docx|txt|md)$/)){
+            return cb(new Error('Please upload a Word document, text file or markdown'))
+        }
+
+        cb(undefined, true)
+    }
+})
+
+
+// Express error handling
+app.post('/upload', upload.single('upload'), (req,res)=>{
+    res.send()
+}, (error, req, res, next)=>{
+    res.status(400).send({ error: error.message})
+})
 
 app.use(express.json()) // Express will now auto parse the body as JSON
 
@@ -47,16 +58,3 @@ app.listen(port, ()=>{
     console.log('Server is listening on ' + port)
 })
 
-jwt 
-
-const myFunction = async ()=>{
-
-    // Creates a JWT with a secret key
-    const token = jwt.sign({ _id: 'abc123'}, 'thisismynewcourse', { expiresIn: '7 days'})
-    console.log(token)
-
-    const data = jwt.verify(token, 'thisismynewcourse')
-    console.log(data)
-}
-
-myFunction()
